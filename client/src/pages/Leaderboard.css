@@ -1,0 +1,80 @@
+.leaderboard-page { padding-bottom: 40px; }
+.lb-header { margin-bottom: 24px; }
+.lb-header h1 { font-size: 26px; margin-bottom: 4px; }
+.lb-header p { color: var(--text-muted); }
+
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  height: 220px;
+}
+
+.podium-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.podium-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  margin-bottom: 4px;
+}
+
+.rank-1 .podium-avatar { width: 64px; height: 64px; font-size: 22px; }
+
+.podium-medal { font-size: 24px; }
+.podium-name { font-size: 13px; font-weight: 700; }
+.podium-points { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+
+.podium-block {
+  width: 100px;
+  border-radius: 8px 8px 0 0;
+}
+.block-1 { height: 100px; background: linear-gradient(180deg, #ffd700, #b8860b); }
+.block-2 { height: 70px; background: linear-gradient(180deg, #c0c0c0, #808080); }
+.block-3 { height: 50px; background: linear-gradient(180deg, #cd7f32, #8b4513); }
+
+.lb-table-card { overflow: hidden; }
+
+.lb-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.lb-table th {
+  text-align: left; padding: 12px 16px;
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+}
+.lb-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.lb-table tr:last-child td { border-bottom: none; }
+.lb-table tr:hover td { background: var(--bg); }
+.lb-table tr.my-row td { background: rgba(26,115,232,0.06); font-weight: 600; }
+
+.rank-cell { font-size: 18px; width: 60px; }
+.rank-num { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+
+.name-cell { display: flex; align-items: center; gap: 10px; }
+.lb-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.you-badge {
+  background: var(--primary); color: #fff;
+  font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+}
+
+.dept-chip {
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 3px 9px; border-radius: 6px; font-size: 12px;
+}
+
+.points-cell { font-weight: 800; color: var(--primary); }
