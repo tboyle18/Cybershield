@@ -6,18 +6,24 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users
 CREATE TABLE users (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name          VARCHAR(120) NOT NULL,
+  name          VARCHAR(120) NOT NULL DEFAULT '',
   email         VARCHAR(255) UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT NOT NULL DEFAULT '',
   role          VARCHAR(30) NOT NULL DEFAULT 'employee' CHECK (role IN ('employee','manager','trainer','admin')),
   department    VARCHAR(100),
   points        INTEGER NOT NULL DEFAULT 0,
   badges_count  INTEGER NOT NULL DEFAULT 0,
   mfa_enabled   BOOLEAN NOT NULL DEFAULT FALSE,
   is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+  setup_token   VARCHAR(100) UNIQUE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration for existing databases:
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS setup_token VARCHAR(100) UNIQUE;
+-- ALTER TABLE users ALTER COLUMN name SET DEFAULT '';
+-- ALTER TABLE users ALTER COLUMN password_hash SET DEFAULT '';
 
 -- Training modules metadata
 CREATE TABLE modules (
@@ -124,6 +130,33 @@ CREATE TABLE notifications (
   message    TEXT NOT NULL,
   read       BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Archived accounts (SOC 2 — 7-year retention)
+CREATE TABLE archived_accounts (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  original_user_id UUID NOT NULL,
+  email            VARCHAR(255) NOT NULL,
+  name             VARCHAR(120) NOT NULL,
+  role             VARCHAR(30) NOT NULL,
+  department       VARCHAR(100),
+  training_data    JSONB NOT NULL DEFAULT '{}',
+  deleted_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_by_id    UUID NOT NULL,
+  deleted_by_email VARCHAR(255) NOT NULL,
+  retain_until     TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '7 years')
+);
+
+-- Administrative audit log
+CREATE TABLE audit_log (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  action       VARCHAR(60) NOT NULL,
+  actor_id     UUID NOT NULL,
+  actor_email  VARCHAR(255),
+  target_id    UUID,
+  target_email VARCHAR(255),
+  details      JSONB,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Indexes for performance

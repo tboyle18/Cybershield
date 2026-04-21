@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FiArrowLeft, FiCheckCircle, FiPlay, FiHelpCircle } from 'react-icons/fi';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { FiArrowLeft, FiCheckCircle, FiPlay, FiHelpCircle, FiRefreshCw, FiLock } from 'react-icons/fi';
 import './ModuleDetail.css';
+
+const MAX_ATTEMPTS = 3;
+const WINDOW_DAYS = 30;
 
 const moduleData = {
   1: {
@@ -106,16 +109,69 @@ The password "P@ssw0rd" is considered weak because it follows a predictable patt
   },
 };
 
+function storageKey(moduleId, sectionIdx) {
+  return `cs_quiz_${moduleId}_${sectionIdx}`;
+}
+
+function loadAttempts(moduleId, sectionIdx) {
+  try {
+    const raw = localStorage.getItem(storageKey(moduleId, sectionIdx));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function saveAttempts(moduleId, sectionIdx, data) {
+  localStorage.setItem(storageKey(moduleId, sectionIdx), JSON.stringify(data));
+}
+
+function getRetakeEligibility(attempts) {
+  if (!attempts) return { canRetake: true, isFirstAttempt: true, attemptsLeft: MAX_ATTEMPTS, daysLeft: WINDOW_DAYS };
+  const now = new Date();
+  const first = new Date(attempts.firstAttempt);
+  const daysSinceFirst = Math.floor((now - first) / (1000 * 60 * 60 * 24));
+  const daysLeft = Math.max(0, WINDOW_DAYS - daysSinceFirst);
+  if (attempts.count >= MAX_ATTEMPTS) {
+    return { canRetake: false, reason: 'limit', attemptsLeft: 0, daysLeft };
+  }
+  if (daysLeft <= 0) {
+    return { canRetake: false, reason: 'window', attemptsLeft: MAX_ATTEMPTS - attempts.count, daysLeft: 0 };
+  }
+  return { canRetake: true, isFirstAttempt: false, attemptsLeft: MAX_ATTEMPTS - attempts.count, daysLeft };
+}
+
 export default function ModuleDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const mod = moduleData[id] || moduleData[1];
-  const [currentSection, setCurrentSection] = useState(0);
-  const [showQuiz, setShowQuiz] = useState(false);
+
+  const initSection = Math.max(0, Math.min(
+    parseInt(searchParams.get('section') || '0', 10),
+    mod.sections.length - 1
+  ));
+
+  const initAttempts = loadAttempts(id || '1', initSection);
+  const initEligibility = getRetakeEligibility(initAttempts);
+  const startWithRetake = searchParams.get('retake') === 'true' && initEligibility.canRetake;
+
+  const [currentSection, setCurrentSection] = useState(initSection);
+  const [showQuiz, setShowQuiz] = useState(startWithRetake);
   const [selected, setSelected] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [attempts, setAttempts] = useState(initAttempts);
+  const [isNewBest, setIsNewBest] = useState(false);
 
   const section = mod.sections[currentSection];
+  const eligibility = getRetakeEligibility(attempts);
+
+  const switchSection = (i) => {
+    setCurrentSection(i);
+    setShowQuiz(false);
+    setSelected({});
+    setSubmitted(false);
+    setIsNewBest(false);
+    setAttempts(loadAttempts(id || '1', i));
+  };
 
   const handleQuizSubmit = () => {
     let correct = 0;
@@ -123,16 +179,104 @@ export default function ModuleDetail() {
       if (selected[i] === q.answer) correct++;
     });
     setScore(correct);
+
+    const now = new Date().toISOString();
+    const pct = Math.round((correct / section.quiz.length) * 100);
+    const prev = loadAttempts(id || '1', currentSection);
+    const updated = {
+      count: (prev?.count || 0) + 1,
+      bestScore: Math.max(correct, prev?.bestScore ?? 0),
+      bestTotal: section.quiz.length,
+      bestPct: Math.max(pct, prev?.bestPct ?? 0),
+      firstAttempt: prev?.firstAttempt || now,
+      lastAttempt: now,
+    };
+    saveAttempts(id || '1', currentSection, updated);
+    setAttempts(updated);
+    setIsNewBest(prev !== null && correct > (prev.bestScore ?? -1));
     setSubmitted(true);
+  };
+
+  const handleRetake = () => {
+    setSelected({});
+    setSubmitted(false);
+    setScore(0);
+    setIsNewBest(false);
   };
 
   const nextSection = () => {
     if (currentSection < mod.sections.length - 1) {
-      setCurrentSection(c => c + 1);
-      setShowQuiz(false);
-      setSelected({});
-      setSubmitted(false);
+      switchSection(currentSection + 1);
     }
+  };
+
+  const renderQuizCta = () => {
+    if (!eligibility.canRetake) {
+      if (eligibility.reason === 'limit') {
+        return (
+          <div className="quiz-blocked">
+            <FiLock className="blocked-icon" />
+            <div>
+              <strong>Maximum attempts reached (4.A.1)</strong>
+              <p>You have used all {MAX_ATTEMPTS} attempts for this quiz. No further retakes are permitted.</p>
+              {attempts && <p className="blocked-best">Your best score: {attempts.bestScore}/{attempts.bestTotal}</p>}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="quiz-blocked">
+          <FiLock className="blocked-icon" />
+          <div>
+            <strong>Retake window closed (4.A.2)</strong>
+            <p>The {WINDOW_DAYS}-day retake window for this quiz has closed.</p>
+            {attempts && <p className="blocked-best">Your best score: {attempts.bestScore}/{attempts.bestTotal}</p>}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="quiz-cta-area">
+        {attempts && (
+          <div className="prev-attempt-info">
+            <span>Previous best: <strong>{attempts.bestScore}/{attempts.bestTotal}</strong></span>
+            <span className="attempt-count">Attempt {attempts.count}/{MAX_ATTEMPTS}</span>
+          </div>
+        )}
+        <button className="btn btn-primary" onClick={() => setShowQuiz(true)}>
+          <FiHelpCircle /> {attempts ? `Retake Quiz (${eligibility.attemptsLeft} left)` : 'Take Section Quiz'}
+        </button>
+      </div>
+    );
+  };
+
+  const renderRetakeArea = () => {
+    const e = getRetakeEligibility(attempts);
+    if (e.canRetake) {
+      return (
+        <div className="retake-area">
+          <p className="attempts-remaining">
+            {e.attemptsLeft} retake{e.attemptsLeft !== 1 ? 's' : ''} remaining &middot; {e.daysLeft} day{e.daysLeft !== 1 ? 's' : ''} left in window
+          </p>
+          <button className="btn btn-outline retake-btn" onClick={handleRetake}>
+            <FiRefreshCw /> Retake Quiz
+          </button>
+        </div>
+      );
+    }
+    if (e.reason === 'limit') {
+      return (
+        <div className="quiz-blocked-inline">
+          <FiLock /> Maximum attempts reached — no further retakes permitted
+        </div>
+      );
+    }
+    return (
+      <div className="quiz-blocked-inline">
+        <FiLock /> Retake window has closed
+      </div>
+    );
   };
 
   return (
@@ -153,7 +297,7 @@ export default function ModuleDetail() {
           <button
             key={s.id}
             className={`section-tab ${currentSection === i ? 'active' : ''} ${i < currentSection ? 'done' : ''}`}
-            onClick={() => { setCurrentSection(i); setShowQuiz(false); setSelected({}); setSubmitted(false); }}
+            onClick={() => switchSection(i)}
           >
             {i < currentSection ? <FiCheckCircle size={14} /> : i + 1}. {s.title}
           </button>
@@ -177,9 +321,7 @@ export default function ModuleDetail() {
           </div>
 
           {!showQuiz ? (
-            <button className="btn btn-primary" onClick={() => setShowQuiz(true)}>
-              <FiHelpCircle /> Take Section Quiz
-            </button>
+            renderQuizCta()
           ) : (
             <div className="quiz-section">
               <h3>Section Quiz</h3>
@@ -219,9 +361,15 @@ export default function ModuleDetail() {
                   <div className={`result-score ${score === section.quiz.length ? 'perfect' : score >= section.quiz.length / 2 ? 'pass' : 'fail'}`}>
                     {score}/{section.quiz.length} correct
                   </div>
+                  {isNewBest && (
+                    <div className="new-best-banner">🎉 New best score!</div>
+                  )}
                   <p>{score === section.quiz.length ? '🎉 Perfect score!' : score >= section.quiz.length / 2 ? '✅ Good job! You passed.' : '❌ Review the material and try again.'}</p>
+
+                  {renderRetakeArea()}
+
                   {currentSection < mod.sections.length - 1 && (
-                    <button className="btn btn-primary" onClick={nextSection}>
+                    <button className="btn btn-primary" onClick={nextSection} style={{ marginTop: 12 }}>
                       <FiPlay /> Next Section
                     </button>
                   )}

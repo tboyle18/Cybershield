@@ -16,6 +16,8 @@ import Progress from './pages/Progress';
 import Leaderboard from './pages/Leaderboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
+import AccountSetup from './pages/AccountSetup';
+import Reports from './pages/Reports';
 import './styles/global.css';
 
 function ProtectedRoute({ children, adminOnly = false }) {
@@ -76,6 +78,13 @@ function AppRoutes() {
       <Route path="/admin" element={
         <ProtectedRoute adminOnly><AppLayout><AdminDashboard /></AppLayout></ProtectedRoute>
       } />
+
+      <Route path="/reports" element={
+        <ProtectedRoute><AppLayout><Reports /></AppLayout></ProtectedRoute>
+      } />
+
+      {/* Public setup page — accessible without login via emailed token */}
+      <Route path="/setup" element={<AccountSetup />} />
 
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
       <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />

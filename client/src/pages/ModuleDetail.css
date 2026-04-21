@@ -112,3 +112,97 @@
 }
 .module-complete h3 { margin-bottom: 8px; }
 .module-complete p { color: var(--text-muted); margin-bottom: 14px; }
+
+/* ── Quiz retake UI ─────────────────────────────────── */
+
+.quiz-cta-area { display: flex; flex-direction: column; gap: 10px; }
+
+.prev-attempt-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+  width: fit-content;
+}
+.prev-attempt-info strong { color: var(--text); }
+.attempt-count { font-weight: 600; color: var(--primary); }
+
+.quiz-blocked {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: rgba(229,57,53,0.06);
+  border: 1.5px solid rgba(229,57,53,0.25);
+  max-width: 520px;
+}
+.quiz-blocked .blocked-icon {
+  color: var(--danger);
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.quiz-blocked strong { font-size: 14px; color: var(--danger); display: block; margin-bottom: 4px; }
+.quiz-blocked p { font-size: 13px; color: var(--text-muted); margin: 0; }
+.blocked-best { margin-top: 6px !important; font-weight: 600; color: var(--text) !important; }
+
+.new-best-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(0,200,83,0.12);
+  border: 1px solid rgba(0,200,83,0.35);
+  color: #1a7a4a;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.retake-area {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.attempts-remaining {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 !important;
+}
+.retake-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 7px 16px;
+}
+
+.quiz-blocked-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(229,57,53,0.06);
+  border: 1px solid rgba(229,57,53,0.2);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}

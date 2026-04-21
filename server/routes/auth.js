@@ -44,6 +44,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const user = result.rows[0];
+    if (!user.is_active) {
+      return res.status(403).json({ error: 'Account setup not complete. Please check your email for the setup link.' });
+    }
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });

@@ -1,5 +1,76 @@
 .sim-page { padding-bottom: 40px; }
 
+/* ── Start screen ──────────────────────────────────────────────────────── */
+.sim-start-screen {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.sim-start-card {
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+}
+
+.sim-start-icon { font-size: 56px; }
+
+.sim-start-card h1 { font-size: 28px; margin: 0; }
+
+.sim-start-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 480px;
+}
+
+.sim-rules-grid {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.sim-rule-item {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sim-rule-item span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.sim-rule-item strong { font-size: 14px; }
+.pass-rule { background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.3); }
+.pass-rule span { color: var(--accent); }
+.fail-rule { background: rgba(229,57,53,0.08); border: 1px solid rgba(229,57,53,0.3); }
+.fail-rule span { color: var(--danger); }
+
+.sim-instructions {
+  text-align: left;
+  padding-left: 20px;
+  margin: 0;
+  width: 100%;
+}
+.sim-instructions li {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+.btn-lg {
+  padding: 12px 28px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Active simulation header ──────────────────────────────────────────── */
 .sim-header {
   display: flex;
   align-items: flex-start;
@@ -8,8 +79,59 @@
   gap: 16px;
 }
 .sim-header h1 { font-size: 26px; margin-bottom: 4px; }
-.sim-header p { color: var(--text-muted); }
+.sim-header > div > p { color: var(--text-muted); }
 
+.sim-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  flex-shrink: 0;
+}
+
+.sim-status-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.sim-status-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.sim-status-value { font-size: 18px; font-weight: 800; }
+.correct-val { color: var(--accent); }
+.warn-val { color: var(--warning); }
+
+.sim-status-sep {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+/* ── Notification toast ────────────────────────────────────────────────── */
+.sim-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 360px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sim-notification--correct { background: rgba(0,200,83,0.12); border: 1px solid var(--accent); color: var(--accent); }
+.sim-notification--warning { background: rgba(249,168,37,0.12); border: 1px solid var(--warning); color: var(--warning); }
+.sim-notification--info    { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+
+/* ── Inbox layout ──────────────────────────────────────────────────────── */
 .sim-layout {
   display: grid;
   grid-template-columns: 340px 1fr;
@@ -37,7 +159,7 @@
 }
 .sim-email-item:hover { background: var(--bg); }
 .sim-email-item.selected { background: rgba(26,115,232,0.06); border-left: 3px solid var(--primary); }
-.sim-email-item.flagged { border-left: 3px solid var(--danger); }
+.sim-email-item.flagged  { border-left: 3px solid var(--danger); }
 
 .sim-email-avatar {
   width: 36px;
@@ -53,18 +175,15 @@
 
 .sim-email-info { flex: 1; min-width: 0; }
 
-.sim-email-top {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2px;
-}
-.sim-email-from { font-size: 13px; font-weight: 700; }
-.sim-email-time { font-size: 11px; color: var(--text-muted); }
+.sim-email-top { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.sim-email-from    { font-size: 13px; font-weight: 700; }
+.sim-email-time    { font-size: 11px; color: var(--text-muted); }
 .sim-email-subject { font-size: 13px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sim-email-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.sim-flagged-icon { color: var(--danger); font-size: 16px; flex-shrink: 0; align-self: center; }
+.sim-flagged-icon { font-size: 16px; flex-shrink: 0; align-self: center; }
 
+/* ── Email detail ──────────────────────────────────────────────────────── */
 .sim-email-detail { overflow-y: auto; }
 
 .sim-email-content { height: 100%; display: flex; flex-direction: column; gap: 16px; }
@@ -86,35 +205,10 @@
   color: var(--text-muted);
 }
 
-.sim-email-body {
-  flex: 1;
-  font-size: 14.5px;
-  line-height: 1.8;
-}
+.sim-email-body { flex: 1; font-size: 14.5px; line-height: 1.8; }
 .sim-email-body p { margin-bottom: 6px; }
 
-.sim-reveal-panel {
-  padding: 16px;
-  border-radius: 10px;
-}
-.sim-reveal-panel.phishing { background: rgba(229,57,53,0.08); border: 1px solid var(--danger); }
-.sim-reveal-panel.legit { background: rgba(0,200,83,0.08); border: 1px solid var(--accent); }
-
-.reveal-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 800;
-  margin-bottom: 10px;
-}
-.sim-reveal-panel.phishing .reveal-title { color: var(--danger); }
-.sim-reveal-panel.legit .reveal-title { color: var(--accent); }
-
-.reveal-flags ul { margin: 8px 0 12px 18px; }
-.reveal-flags li { font-size: 13px; margin-bottom: 4px; }
-
-.sim-reveal-panel p { font-size: 13.5px; line-height: 1.7; }
+.hook-btn { min-width: 180px; font-size: 14px; }
 
 .sim-email-placeholder {
   display: flex;
@@ -127,11 +221,12 @@
 }
 .sim-email-placeholder p { font-size: 15px; }
 
-/* Results */
+/* ── Results screen ────────────────────────────────────────────────────── */
 .sim-result-card {
-  max-width: 700px;
+  max-width: 720px;
   margin: 0 auto;
 }
+
 .sim-result-icon {
   font-size: 56px;
   margin-bottom: 16px;
@@ -140,8 +235,9 @@
 }
 .sim-result-icon.pass { color: var(--accent); }
 .sim-result-icon.fail { color: var(--danger); }
+
 .sim-result-card h2 { text-align: center; font-size: 26px; margin-bottom: 8px; }
-.sim-result-card > p { text-align: center; color: var(--text-muted); margin-bottom: 24px; }
+.sim-result-sub    { text-align: center; color: var(--text-muted); margin-bottom: 24px; }
 
 .sim-score-grid {
   display: flex;
@@ -149,32 +245,36 @@
   justify-content: center;
   margin-bottom: 8px;
 }
+
 .sim-score-item {
   text-align: center;
-  padding: 16px 24px;
+  padding: 16px 28px;
   border-radius: 10px;
 }
-.sim-score-item span { display: block; font-size: 36px; font-weight: 800; }
+.sim-score-item span  { display: block; font-size: 36px; font-weight: 800; }
 .sim-score-item label { font-size: 13px; color: var(--text-muted); }
 .sim-score-item.correct { background: rgba(0,200,83,0.1); }
 .sim-score-item.correct span { color: var(--accent); }
-.sim-score-item.missed { background: rgba(229,57,53,0.1); }
-.sim-score-item.missed span { color: var(--danger); }
-.sim-score-item.false { background: rgba(249,168,37,0.1); }
-.sim-score-item.false span { color: var(--warning); }
+.sim-score-item.missed  { background: rgba(229,57,53,0.1); }
+.sim-score-item.missed span  { color: var(--danger); }
+.sim-score-item.false   { background: rgba(249,168,37,0.1); }
+.sim-score-item.false span   { color: var(--warning); }
+
+.sim-results-heading { margin-top: 28px; margin-bottom: 12px; font-size: 17px; }
 
 .result-email-row {
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
 }
 .result-email-row.was-phishing { border-color: rgba(229,57,53,0.3); background: rgba(229,57,53,0.04); }
-.result-email-row.was-legit { border-color: rgba(0,200,83,0.3); background: rgba(0,200,83,0.04); }
+.result-email-row.was-legit    { border-color: rgba(0,200,83,0.3);  background: rgba(0,200,83,0.04); }
+.result-email-row.false-positive { border-color: rgba(249,168,37,0.4); background: rgba(249,168,37,0.06); }
 
 .result-email-info { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
 .result-label { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
-.result-from { font-size: 12px; color: var(--text-muted); }
+.result-from  { font-size: 12px; color: var(--text-muted); }
 
 .result-flags ul { margin: 6px 0 0 16px; }
 .result-flags li { font-size: 13px; color: var(--danger); margin-bottom: 3px; }

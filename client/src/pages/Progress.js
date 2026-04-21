@@ -1,7 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiAward, FiDownload, FiCheckCircle, FiBook, FiTrendingUp } from 'react-icons/fi';
+import { FiAward, FiDownload, FiCheckCircle, FiBook, FiTrendingUp, FiRefreshCw } from 'react-icons/fi';
 import './Progress.css';
+
+const MAX_ATTEMPTS = 3;
+const WINDOW_DAYS = 30;
 
 const badges = [
   { id: 1, name: 'Phish Spotter', icon: '🎣', earned: true, desc: 'Completed Phishing Awareness module' },
@@ -23,11 +27,20 @@ const modules = [
 ];
 
 const quizHistory = [
-  { module: 'Phishing Awareness', section: 'What is Phishing?', score: '2/2', points: 20, date: '2026-04-07' },
-  { module: 'Phishing Awareness', section: 'Recognizing Phishing Emails', score: '2/2', points: 20, date: '2026-04-07' },
-  { module: 'Password Security', section: 'Why Password Strength Matters', score: '2/2', points: 20, date: '2026-04-08' },
-  { module: 'Password Security', section: 'Why Password Strength Matters', score: '1/2', points: 10, date: '2026-04-06' },
+  { moduleId: 1, module: 'Phishing Awareness', section: 'What is Phishing?', sectionIdx: 0, bestScore: '2/2', bestPct: 100, attempts: 1, date: '2026-04-07' },
+  { moduleId: 1, module: 'Phishing Awareness', section: 'Recognizing Phishing Emails', sectionIdx: 1, bestScore: '2/2', bestPct: 100, attempts: 1, date: '2026-04-07' },
+  { moduleId: 2, module: 'Password Security', section: 'Why Password Strength Matters', sectionIdx: 0, bestScore: '2/2', bestPct: 100, attempts: 2, date: '2026-04-08' },
 ];
+
+function getRetakeEligibility(attempts, firstAttemptDate) {
+  if (!attempts || attempts === 0) return { canRetake: true, attemptsLeft: MAX_ATTEMPTS };
+  if (attempts >= MAX_ATTEMPTS) return { canRetake: false, reason: 'limit', attemptsLeft: 0 };
+  if (firstAttemptDate) {
+    const daysSince = Math.floor((new Date() - new Date(firstAttemptDate)) / (1000 * 60 * 60 * 24));
+    if (daysSince >= WINDOW_DAYS) return { canRetake: false, reason: 'window', attemptsLeft: MAX_ATTEMPTS - attempts };
+  }
+  return { canRetake: true, attemptsLeft: MAX_ATTEMPTS - attempts };
+}
 
 export default function Progress() {
   const { user } = useAuth();
@@ -126,27 +139,52 @@ export default function Progress() {
 
       {/* Quiz History */}
       <div className="card">
-        <h3 style={{ marginBottom: 16 }}>Quiz History</h3>
+        <h3 style={{ marginBottom: 4 }}>Quiz History</h3>
+        <p className="quiz-history-hint">Retake a quiz to improve your best score (max {MAX_ATTEMPTS} attempts, {WINDOW_DAYS}-day window)</p>
         <table className="quiz-history-table">
           <thead>
             <tr>
               <th>Module</th>
               <th>Section</th>
-              <th>Score</th>
-              <th>Points</th>
+              <th>Best Score</th>
+              <th>Attempts</th>
               <th>Date</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {quizHistory.map((h, i) => (
-              <tr key={i}>
-                <td>{h.module}</td>
-                <td>{h.section}</td>
-                <td><span className="badge badge-success">{h.score}</span></td>
-                <td>+{h.points} pts</td>
-                <td>{h.date}</td>
-              </tr>
-            ))}
+            {quizHistory.map((h, i) => {
+              const el = getRetakeEligibility(h.attempts);
+              return (
+                <tr key={i}>
+                  <td>{h.module}</td>
+                  <td>{h.section}</td>
+                  <td>
+                    <span className={`badge ${h.bestPct === 100 ? 'badge-success' : h.bestPct >= 50 ? 'badge-warning' : 'badge-danger'}`}>
+                      {h.bestScore}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="attempt-pill">{h.attempts}/{MAX_ATTEMPTS}</span>
+                  </td>
+                  <td>{h.date}</td>
+                  <td>
+                    {el.canRetake ? (
+                      <Link
+                        to={`/modules/${h.moduleId}?section=${h.sectionIdx}&retake=true`}
+                        className="retake-link"
+                      >
+                        <FiRefreshCw size={12} /> Retake
+                      </Link>
+                    ) : el.reason === 'limit' ? (
+                      <span className="retake-limit">Max reached</span>
+                    ) : (
+                      <span className="retake-limit">Window closed</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

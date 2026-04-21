@@ -48,17 +48,67 @@ router.post('/:id/progress', requireAuth, async (req, res) => {
 router.post('/:id/quiz', requireAuth, async (req, res) => {
   const { section_id, score, total, points_earned } = req.body;
   const moduleId = req.params.id;
+  const MAX_ATTEMPTS = 3;
+  const WINDOW_DAYS = 30;
+
   try {
+    // Check existing attempts for this module+section
+    const attemptsResult = await pool.query(
+      `SELECT COUNT(*) AS count, MIN(created_at) AS first_attempt, MAX(score) AS best_score
+       FROM quiz_results
+       WHERE user_id = $1 AND module_id = $2 AND section_id = $3`,
+      [req.user.id, moduleId, section_id]
+    );
+    const { count, first_attempt, best_score } = attemptsResult.rows[0];
+    const attemptCount = parseInt(count, 10);
+
+    // 4.A.1 — attempt limit reached
+    if (attemptCount >= MAX_ATTEMPTS) {
+      return res.status(403).json({
+        error: 'Maximum retake limit reached. No further attempts are permitted for this quiz.',
+        code: 'LIMIT_REACHED',
+      });
+    }
+
+    // 4.A.2 — retake window expired (checked only after at least one prior attempt)
+    if (first_attempt) {
+      const daysSinceFirst = Math.floor((Date.now() - new Date(first_attempt).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceFirst >= WINDOW_DAYS) {
+        return res.status(403).json({
+          error: `The ${WINDOW_DAYS}-day retake window for this quiz has closed.`,
+          code: 'WINDOW_EXPIRED',
+        });
+      }
+    }
+
+    // Best-score points policy: only award points for a new personal best
+    const prevBest = best_score !== null ? parseInt(best_score, 10) : -1;
+    const isNewBest = score > prevBest;
+    const pointsToAward = isNewBest ? (points_earned || 0) : 0;
+
+    // Record the attempt
     await pool.query(
       'INSERT INTO quiz_results (user_id, module_id, section_id, score, total, points_earned) VALUES ($1, $2, $3, $4, $5, $6)',
-      [req.user.id, moduleId, section_id, score, total, points_earned]
+      [req.user.id, moduleId, section_id, score, total, pointsToAward]
     );
-    await pool.query(
-      'UPDATE users SET points = points + $1 WHERE id = $2',
-      [points_earned, req.user.id]
-    );
-    res.json({ success: true, points_earned });
+
+    // Only increment user points on a new best
+    if (pointsToAward > 0) {
+      await pool.query(
+        'UPDATE users SET points = points + $1 WHERE id = $2',
+        [pointsToAward, req.user.id]
+      );
+    }
+
+    res.json({
+      success: true,
+      points_earned: pointsToAward,
+      isNewBest,
+      attemptNumber: attemptCount + 1,
+      attemptsLeft: MAX_ATTEMPTS - (attemptCount + 1),
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });

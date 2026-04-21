@@ -5,23 +5,27 @@ import { useTheme } from '../context/ThemeContext';
 import {
   FiHome, FiBook, FiMail, FiBarChart2, FiUsers,
   FiLogOut, FiShield, FiSun, FiMoon,
-  FiAward, FiSettings, FiHelpCircle, FiGrid
+  FiAward, FiSettings, FiHelpCircle, FiGrid, FiFileText,
 } from 'react-icons/fi';
 import './Sidebar.css';
 
 const navItems = [
-  { to: '/dashboard', icon: <FiHome />, label: 'Dashboard' },
-  { to: '/modules', icon: <FiBook />, label: 'Training Modules' },
-  { to: '/simulation', icon: <FiMail />, label: 'Phishing Sim' },
-  { to: '/threat-analysis', icon: <FiShield />, label: 'Threat Analysis' },
-  { to: '/knowledge-hub', icon: <FiGrid />, label: 'Knowledge Hub' },
-  { to: '/progress', icon: <FiBarChart2 />, label: 'My Progress' },
-  { to: '/leaderboard', icon: <FiAward />, label: 'Leaderboard' },
+  { to: '/dashboard',      icon: <FiHome />,     label: 'Dashboard' },
+  { to: '/modules',        icon: <FiBook />,     label: 'Training Modules' },
+  { to: '/simulation',     icon: <FiMail />,     label: 'Phishing Sim' },
+  { to: '/threat-analysis',icon: <FiShield />,   label: 'Threat Analysis' },
+  { to: '/knowledge-hub',  icon: <FiGrid />,     label: 'Knowledge Hub' },
+  { to: '/progress',       icon: <FiBarChart2 />,label: 'My Progress' },
+  { to: '/leaderboard',    icon: <FiAward />,    label: 'Leaderboard' },
 ];
 
 const adminItems = [
-  { to: '/admin', icon: <FiUsers />, label: 'Admin Dashboard' },
-  { to: '/admin/compliance', icon: <FiBarChart2 />, label: 'Compliance' },
+  { to: '/admin',   icon: <FiUsers />,    label: 'Admin Dashboard' },
+];
+
+// Visible to both managers and admins
+const reportItems = [
+  { to: '/reports', icon: <FiFileText />, label: 'Compliance Reports' },
 ];
 
 export default function Sidebar() {
@@ -29,6 +33,8 @@ export default function Sidebar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  const isManager = user?.role === 'manager' || user?.role === 'admin';
 
   const handleLogout = () => {
     logout();
@@ -68,6 +74,22 @@ export default function Sidebar() {
             {!collapsed && <span className="nav-label">{item.label}</span>}
           </NavLink>
         ))}
+
+        {isManager && (
+          <>
+            {!collapsed && <div className="nav-section-label">Reporting</div>}
+            {reportItems.map(item => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => `nav-item admin-item ${isActive ? 'active' : ''}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {!collapsed && <span className="nav-label">{item.label}</span>}
+              </NavLink>
+            ))}
+          </>
+        )}
 
         {isAdmin && (
           <>
